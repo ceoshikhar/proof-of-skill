@@ -2,7 +2,7 @@ import { FC } from "react";
 import { GoPlusCircle } from "react-icons/go";
 
 import {
-    Candidate,
+    CandidateRaw,
     CandidateListItem,
     useCompareContext,
 } from "../CompareContext";

@@ -2,9 +2,7 @@
 
 import {
     createContext,
-    Dispatch,
     ReactNode,
-    SetStateAction,
     useCallback,
     useContext,
     useEffect,
@@ -18,7 +16,34 @@ export interface CandidateListItem {
     isSelected?: boolean;
 }
 
+export interface CandidateRaw {
+    id: string;
+    name: string;
+    data: {
+        data: {
+            skillset: {
+                id: string;
+                name: string;
+                skills: {
+                    id: string;
+                    name: string;
+                    pos: {
+                        id: string;
+                        consensus_score: number;
+                    }[];
+                }[];
+            }[];
+        };
+    };
+}
+
 export interface Candidate {
+    id: string;
+    name: string;
+    skills: Record<string, number>; // Where string is the skill's ID and number is consensus_score.
+}
+
+export interface CandidateSkill {
     id: string;
     name: string;
 }
@@ -27,12 +52,14 @@ interface CompareContext {
     candidates: CandidateListItem[];
     candidatesSelected: Candidate[];
     selectCandidate: (id: string) => void;
+    skills: CandidateSkill[];
 }
 
 const Context = createContext<CompareContext>({
     candidates: [],
     candidatesSelected: [],
     selectCandidate: () => null,
+    skills: [],
 });
 
 export const CompareProvider: React.FC<{ children: ReactNode }> = ({
@@ -42,6 +69,11 @@ export const CompareProvider: React.FC<{ children: ReactNode }> = ({
     const [candidatesSelected, setCandidatesSelected] = useState<Candidate[]>(
         []
     );
+    const [skills, setSkills] = useState<CandidateSkill[]>([]);
+    // To lookup the skill by ID if it was already added to `skills` array or not.
+    // This prevents us from loopings `skills` array several times when selecting
+    // a candidate and importing their skill(s).
+    const [skillsMap, setSkillsMap] = useState<Map<string, boolean>>(new Map());
 
     const selectCandidate = useCallback(async (id: string) => {
         for (let i = 0; i < candidatesSelected.length; i++) {
@@ -59,8 +91,41 @@ export const CompareProvider: React.FC<{ children: ReactNode }> = ({
             `https://forinterview.onrender.com/people/${id}`
         );
 
-        const candidateData = await data.json();
-        setCandidatesSelected((prev) => [...prev, candidateData]);
+        const candidateRawData: CandidateRaw = await data.json();
+        console.log({ candidateData: candidateRawData });
+
+        const newSkillsToAdd: CandidateSkill[] = [];
+
+        const allCandidateSkillset = candidateRawData.data.data.skillset;
+        const allCandidateSkillsWithConsensusScore: Record<string, number> = {};
+
+        for (let i = 0; i < allCandidateSkillset.length; i++) {
+            const candidateSkills = allCandidateSkillset[i].skills;
+
+            for (let j = 0; j < candidateSkills.length; j++) {
+                const skillToAdd = candidateSkills[j];
+                console.log({ skillToAdd });
+                const score = skillToAdd.pos[0].consensus_score;
+                allCandidateSkillsWithConsensusScore[skillToAdd.id] = score;
+
+                if (!skillsMap.has(skillToAdd.id)) {
+                    newSkillsToAdd.push({
+                        id: skillToAdd.id,
+                        name: skillToAdd.name,
+                    });
+                    skillsMap.set(skillToAdd.id, true);
+                }
+            }
+        }
+
+        const candidate: Candidate = {
+            id: candidateRawData.id,
+            name: candidateRawData.name,
+            skills: allCandidateSkillsWithConsensusScore,
+        };
+
+        setCandidatesSelected((prev) => [...prev, candidate]);
+        setSkills((prev) => [...prev, ...newSkillsToAdd]);
 
         setCandidates((prev) => {
             const copy = Array.from(prev);
@@ -92,8 +157,9 @@ export const CompareProvider: React.FC<{ children: ReactNode }> = ({
             candidates,
             candidatesSelected,
             selectCandidate,
+            skills,
         };
-    }, [candidates, candidatesSelected, selectCandidate]);
+    }, [candidates, candidatesSelected, selectCandidate, skills]);
 
     return <Context.Provider value={value}>{children}</Context.Provider>;
 };
