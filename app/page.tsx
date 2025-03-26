@@ -4,7 +4,7 @@ import { FaArrowLeft } from "react-icons/fa6";
 
 import { useCompareContext } from "./CompareContext";
 import { CompareViewHeatmap } from "./components/CompareViewHeatmap";
-import { PeopleSelector } from "./components/PeopleSelector";
+import { CandidateSelector } from "./components/CandidateSelector";
 
 export default function Home() {
     const { candidatesSelected } = useCompareContext();
@@ -17,18 +17,18 @@ export default function Home() {
                 </button>
             </div>
 
-            <div className="flex items-center justify-between mx-14 mt-8">
-                <h1 className="text-3xl font-bold text-gray-500">
+            <div className="flex items-center justify-between mx-14 mt-8 mb-4">
+                <h1 className="text-3xl font-bold text-gray-400 font-[poppins]">
                     Posk_UXdesigner_sr001
                 </h1>
 
-                <h3 className="text-lg text-gray-500">
-                    {candidatesSelected} Candidates
+                <h3 className="text-md text-gray-500 font-[poppins] font-normal">
+                    {candidatesSelected.length} Candidates
                 </h3>
             </div>
 
             <div className="flex gap-8">
-                <PeopleSelector />
+                <CandidateSelector />
                 <div className="w-full bg-red-500">
                     <CompareViewHeatmap />
                 </div>
