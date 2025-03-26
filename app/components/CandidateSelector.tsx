@@ -4,12 +4,12 @@ import { GoPlusCircle } from "react-icons/go";
 import {
     CandidateRaw,
     CandidateListItem,
-    useCompareContext,
+    useCompareView,
 } from "../CompareContext";
 import clsx from "clsx";
 
 export const CandidateSelector = () => {
-    const { candidates } = useCompareContext();
+    const { candidates } = useCompareView();
 
     // First 5 will be considered as "Recommended";
     const recommendedCandidates = candidates.slice(4);
@@ -70,7 +70,7 @@ const CandidateSelectItem: FC<CandidateListItem> = ({
     name,
     isSelected,
 }) => {
-    const { selectCandidate } = useCompareContext();
+    const { selectCandidate } = useCompareView();
 
     return (
         <div

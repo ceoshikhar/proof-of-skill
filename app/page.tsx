@@ -2,12 +2,12 @@
 
 import { FaArrowLeft } from "react-icons/fa6";
 
-import { useCompareContext } from "./CompareContext";
+import { useCompareView } from "./CompareContext";
 import { CompareViewHeatmap } from "./components/CompareViewHeatmap";
 import { CandidateSelector } from "./components/CandidateSelector";
 
 export default function Home() {
-    const { candidatesSelected } = useCompareContext();
+    const { candidatesSelected } = useCompareView();
 
     return (
         <div>
@@ -29,7 +29,7 @@ export default function Home() {
 
             <div className="flex gap-8">
                 <CandidateSelector />
-                <div className="w-full bg-red-500">
+                <div className="w-full">
                     <CompareViewHeatmap />
                 </div>
             </div>

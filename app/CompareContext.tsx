@@ -37,10 +37,12 @@ export interface CandidateRaw {
     };
 }
 
+export type ConsensusScore = 0 | 1 | 2 | 3 | 4;
+
 export interface Candidate {
     id: string;
     name: string;
-    skills: Record<string, number>; // Where string is the skill's ID and number is consensus_score.
+    skills: Record<string, ConsensusScore>; // Where string is the skill's ID
 }
 
 export interface CandidateSkill {
@@ -92,20 +94,22 @@ export const CompareProvider: React.FC<{ children: ReactNode }> = ({
         );
 
         const candidateRawData: CandidateRaw = await data.json();
-        console.log({ candidateData: candidateRawData });
 
         const newSkillsToAdd: CandidateSkill[] = [];
 
         const allCandidateSkillset = candidateRawData.data.data.skillset;
-        const allCandidateSkillsWithConsensusScore: Record<string, number> = {};
+        const allCandidateSkillsWithConsensusScore: Record<
+            string,
+            ConsensusScore
+        > = {};
 
         for (let i = 0; i < allCandidateSkillset.length; i++) {
             const candidateSkills = allCandidateSkillset[i].skills;
 
             for (let j = 0; j < candidateSkills.length; j++) {
                 const skillToAdd = candidateSkills[j];
-                console.log({ skillToAdd });
-                const score = skillToAdd.pos[0].consensus_score;
+                const score = skillToAdd.pos[0]
+                    .consensus_score as ConsensusScore;
                 allCandidateSkillsWithConsensusScore[skillToAdd.id] = score;
 
                 if (!skillsMap.has(skillToAdd.id)) {
@@ -164,7 +168,7 @@ export const CompareProvider: React.FC<{ children: ReactNode }> = ({
     return <Context.Provider value={value}>{children}</Context.Provider>;
 };
 
-export const useCompareContext = (): CompareContext => {
+export const useCompareView = (): CompareContext => {
     const context = useContext(Context);
 
     if (!context) {
