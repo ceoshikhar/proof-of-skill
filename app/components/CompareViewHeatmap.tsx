@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { FC, ReactNode } from "react";
+import { FC, ReactNode, useMemo } from "react";
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
 import {
     Candidate,
@@ -8,7 +8,12 @@ import {
     useCompareView,
 } from "../CompareContext";
 import { getInitials } from "../lib/utils";
-import { heatmapTileColorMap } from "../lib/constants";
+import {
+    heatmapTileColorMap,
+    heatmapTileColorMapDisabled,
+    staticCandidatesSelectedData,
+    staticSkillData,
+} from "../lib/constants";
 
 export const CompareViewHeatmap = () => {
     const { skills, candidatesSelected } = useCompareView();
@@ -32,7 +37,7 @@ export const CompareViewHeatmap = () => {
             <HeatmapTable
                 skills={skills}
                 candidates={candidatesSelected}
-                noCandidatesAreSelected={candidatesSelected.length === 0}
+                noCandidateSelected={candidatesSelected.length === 0}
             />
         </div>
     );
@@ -45,11 +50,10 @@ const HeatmapButton: FC<{ children: ReactNode; isActive?: boolean }> = ({
     return (
         <button
             className={clsx(
-                "border-1 border-black p-2 text-sm font-[poppins]",
+                "border-1 border-black p-2 text-sm font-[poppins] hover:cursor-pointer",
                 {
                     "bg-green-700": isActive,
                     "text-white": isActive,
-                    "hover:cursor-pointer": !isActive,
                 }
             )}
         >
@@ -76,23 +80,34 @@ interface HeatmapTableProps {
     skills: CandidateSkill[];
     candidates: Candidate[];
     // To allow us to render unfilled state. Where we show "Select candidate to compare".
-    noCandidatesAreSelected?: boolean;
+    noCandidateSelected?: boolean;
 }
 
 const HeatmapTable: FC<HeatmapTableProps> = ({
-    skills,
-    candidates,
-    noCandidatesAreSelected = false,
+    skills: skillsProp,
+    candidates: candidatesProp,
+    noCandidateSelected = false,
 }) => {
+    const candidates = useMemo(
+        () =>
+            noCandidateSelected ? staticCandidatesSelectedData : candidatesProp,
+        [noCandidateSelected, candidatesProp]
+    );
+
+    const skills = useMemo(
+        () => (noCandidateSelected ? staticSkillData : skillsProp),
+        [noCandidateSelected, skillsProp]
+    );
+
     return (
-        <table className="mt-10">
+        <table className="relative mt-12">
             <thead>
                 <tr>
-                    <th>Skill</th>
+                    <th>{""}</th>
                     {candidates.map((candidate) => (
                         <th key={candidate.id} className="pr-6">
-                            <div className="relative">
-                                <div className="w-4 h-4 rounded-full bg-gray-200" />
+                            <div className="relative left-1.75 bottom-1">
+                                <div className="w-5 h-5 rounded-full bg-gray-300" />
                                 <div className="absolute bottom-6 left-4 -rotate-45">
                                     {getInitials(candidate.name)}
                                 </div>
@@ -103,15 +118,32 @@ const HeatmapTable: FC<HeatmapTableProps> = ({
             </thead>
 
             <tbody>
+                <tr>
+                    <td
+                        className={clsx("absolute top-50 left-135", {
+                            hidden: !noCandidateSelected,
+                        })}
+                    >
+                        <HeatmapButton isActive>
+                            Select candidate to compare
+                        </HeatmapButton>
+                    </td>
+                </tr>
+
                 {skills.map((skill) => {
                     return (
                         <tr key={skill.id}>
-                            <td className="pr-4">{skill.name}</td>
+                            <td className="pr-4 font-[poppins] min-w-[350px]">
+                                {skill.name}
+                            </td>
                             {candidates.map((candidate) => {
                                 return (
                                     <td key={candidate.id}>
                                         <HeatmapTableTile
                                             score={candidate.skills[skill.id]}
+                                            noCandidateSelected={
+                                                noCandidateSelected
+                                            }
                                         />
                                     </td>
                                 );
@@ -124,8 +156,13 @@ const HeatmapTable: FC<HeatmapTableProps> = ({
     );
 };
 
-const HeatmapTableTile: FC<{ score: ConsensusScore }> = ({ score }) => {
-    const bgColor = heatmapTileColorMap[score];
+const HeatmapTableTile: FC<{
+    score: ConsensusScore;
+    noCandidateSelected?: boolean;
+}> = ({ score, noCandidateSelected = false }) => {
+    const bgColor = noCandidateSelected
+        ? heatmapTileColorMapDisabled[score]
+        : heatmapTileColorMap[score];
 
     return <div className="w-8 h-5" style={{ background: bgColor }}></div>;
 };

@@ -15,7 +15,7 @@ export const CandidateSelector = () => {
     const recommendedCandidates = candidates.slice(4);
 
     return (
-        <div className="border-2 border-black border-solid flex flex-col items-center">
+        <div className="border-2 border-black border-solid flex flex-col items-center min-w-[300px]">
             <h1 className="text-lg font-[poppins] pt-2 pb-2">
                 Most Recommeneded
             </h1>
@@ -46,7 +46,7 @@ export const CandidateSelector = () => {
             <div className="w-full border-t-2 border-t-back border-b-2 border-b-back border-solid flex flex-col items-center justify-center gap-y-3 pt-3">
                 {candidates.map((candidate, idx) => {
                     // Don't show the "recommended" candidates again.
-                    if (idx < 4) return null;
+                    if (idx < 5) return null;
 
                     return (
                         <CandidateSelectItem
