@@ -92,6 +92,7 @@ const CandidateSelectItem: FC<CandidateListItem> = ({
                     "hover:cursor-not-allowed": isSelected,
                 })}
                 onClick={() => !isSelected && selectCandidate(id)}
+                disabled={isSelected}
             >
                 <GoPlusCircle color="#998AFF" />
             </button>

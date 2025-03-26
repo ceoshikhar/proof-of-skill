@@ -1,5 +1,12 @@
 import clsx from "clsx";
-import { FC, ReactNode, useMemo } from "react";
+import {
+    FC,
+    ReactNode,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
 import {
     Candidate,
@@ -14,6 +21,7 @@ import {
     staticCandidatesSelectedData,
     staticSkillData,
 } from "../lib/constants";
+import Select from "react-select";
 
 export const CompareViewHeatmap = () => {
     const { skills, candidatesSelected } = useCompareView();
@@ -83,27 +91,75 @@ interface HeatmapTableProps {
     noCandidateSelected?: boolean;
 }
 
+const options = [
+    { value: "chocolate", label: "Chocolate" },
+    { value: "strawberry", label: "Strawberry" },
+    { value: "vanilla", label: "Vanilla" },
+];
+
 const HeatmapTable: FC<HeatmapTableProps> = ({
     skills: skillsProp,
     candidates: candidatesProp,
     noCandidateSelected = false,
 }) => {
+    const [filteredSkills, setFilteredSkills] = useState<CandidateSkill[]>(
+        noCandidateSelected ? staticSkillData : skillsProp
+    );
+
     const candidates = useMemo(
         () =>
             noCandidateSelected ? staticCandidatesSelectedData : candidatesProp,
         [noCandidateSelected, candidatesProp]
     );
 
-    const skills = useMemo(
-        () => (noCandidateSelected ? staticSkillData : skillsProp),
-        [noCandidateSelected, skillsProp]
+    const skillsOptions = useMemo(
+        () => skillsProp.map((s) => ({ value: s.id, label: s.name })),
+        [skillsProp]
     );
+
+    const handleFilterOnChange = useCallback(
+        (selectedSkills: { value: string; label: string }[]) => {
+            const filteredSkills: CandidateSkill[] = [];
+
+            for (let i = 0; i < selectedSkills.length; i++) {
+                const skill = selectedSkills[i];
+                filteredSkills.push({ id: skill.value, name: skill.label });
+            }
+
+            setFilteredSkills(filteredSkills);
+        },
+        []
+    );
+
+    const skills = useMemo(() => {
+        if (noCandidateSelected) return staticSkillData;
+
+        if (filteredSkills.length > 0) return filteredSkills;
+
+        return skillsProp;
+    }, [noCandidateSelected, filteredSkills, skillsProp]);
+
+    useEffect(() => {
+        setFilteredSkills(noCandidateSelected ? staticSkillData : skillsProp);
+    }, [noCandidateSelected, skillsProp]);
 
     return (
         <table className="relative mt-12">
             <thead>
                 <tr>
-                    <th>{""}</th>
+                    <th>
+                        <div className="w-50 mb-4">
+                            <Select
+                                options={skillsOptions}
+                                isMulti
+                                name="skills filter"
+                                placeholder="Filter"
+                                // @ts-ignore
+                                onChange={handleFilterOnChange}
+                                isDisabled={noCandidateSelected}
+                            />
+                        </div>
+                    </th>
                     {candidates.map((candidate) => (
                         <th key={candidate.id} className="pr-6">
                             <div className="relative left-1.75 bottom-1">
